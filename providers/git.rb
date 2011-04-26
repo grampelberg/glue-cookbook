@@ -50,11 +50,13 @@ action :sync do
               )
   end
 
-  git "#{new_resource.path}" do
-    repository "#{new_resource.repository}"
-    revision "#{new_resource.revision}"
-    ssh_wrapper "/opt/glue/bin/#{new_resource.user}.sh"
-    depth 5
-    action :sync
-  end
+  repo_sync = Chef::Resource::Git.new(new_resource.path, run_context)
+  repo_sync.repository( new_resource.repository )
+  repo_sync.revision( new_resource.revision )
+  repo_sync.ssh_wrapper( "/opt/glue/bin/#{new_resource.user}.sh" )
+  repo_sync.depth( 5 )
+  repo_sync.run_action(:sync)
+
+  @new_resource.updated_by_last_action(true) if repo_sync.updated?
+
 end
