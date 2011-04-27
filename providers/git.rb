@@ -33,22 +33,24 @@ action :sync do
     end
   end
 
-  file "/opt/glue/keys/#{new_resource.user}.pem" do
-    backup false
-    mode "0600"
-    owner "root"
-    content user['key']
-  end
+  frec = Chef::Resource::File.new("/opt/glue/keys", run_context)
+  frec.path("/opt/glue/keys/#{new_resource.user}.pem")
+  frec.backup(false)
+  frec.mode("0600")
+  frec.owner("root")
+  frec.content(user["key"])
+  frec.run_action(:create)
 
-  template "/opt/glue/bin/#{new_resource.user}.sh" do
-    mode "0744"
-    owner "root"
-    source "wrapper.sh.erb"
-    cookbook "glue"
-    variables(
-        :user => new_resource.user
-              )
-  end
+  tmpl = Chef::Resource::Template.new("/opt/glue/bin/#{new_resource.user}.sh",
+                                      run_context)
+  tmpl.mode("0744")
+  tmpl.owner("root")
+  tmpl.source("wrapper.sh.erb")
+  tmpl.cookbook("glue")
+  tmpl.variables(
+                 :user => new_resource.user
+                 )
+  tmpl.run_action(:create)
 
   repo_sync = Chef::Resource::Git.new(new_resource.path, run_context)
   repo_sync.repository( new_resource.repository )
